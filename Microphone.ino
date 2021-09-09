@@ -13,8 +13,9 @@
 CRGBArray<NUM_LEDS> leds;
 OneButton animationButton(BUTTON_PIN, true, true);
 
-volatile uint32_t color = 0;
-volatile uint8_t selectedAnimation = 0;
+CRGB color(100, 100, 100);
+uint8_t brightness = 10;
+uint8_t selectedAnimation = 0;
 
 enum animationTypes {
   ANIMATION_RAINBOW = 0,
@@ -39,7 +40,7 @@ void rainbow() {
         return;
     }
 
-    fill_rainbow(leds, mappedValue, color, 20);
+    fill_rainbow(leds, mappedValue, color, 12);
 }
 
 void rainbow_middle() {
@@ -51,7 +52,7 @@ void rainbow_middle() {
         return;
     }
 
-    fill_rainbow(&leds[NUM_LEDS / 2 - 1], mappedValue / 2, color, 2);
+    fill_rainbow(&leds[NUM_LEDS / 2 - 1], mappedValue / 2 + 1, color, 12);
 
     for(int i = (NUM_LEDS / 2 - 1); i >= 0; i--) { 
         if (i == 0) {
@@ -83,7 +84,7 @@ void solid_trail() {
         }
     }
 
-    fill_solid(leds, mappedValue, CRGB(CHSV{color, color / 2, color / 2}));
+    fill_solid(leds, mappedValue, CRGB::Blue);
     calledTime++;
 }
 
@@ -99,7 +100,7 @@ void solid_trail2() {
         leds[lastHead] = CRGB::White;
         leds[lastHead - 1] = CRGB::White;
     }else {
-        if (calledTime % 50 == 0) {
+        if (calledTime % 10 == 0) {
             calledTime = 0;
             leds[lastHead] = CRGB::Black;
             leds[lastHead - 1] = CRGB::Black;
@@ -113,30 +114,15 @@ void solid_trail2() {
     calledTime++;
 }
 
-void handleButton(const byte newState, const unsigned long interval, const byte whichPin) {
-    switch (whichPin) {
-        case BUTTON_PIN:
-            if (newState == LOW) {
-                if (interval <= SHORT_PRESS) {
-                    selectedAnimation++;
-                    if(selectedAnimation % 4 == 0) { selectedAnimation = 0; }
-                }else if(interval >= LONG_PRESS) {
-                    selectedAnimation++;
-                    if(selectedAnimation % 4 == 0) { selectedAnimation = 0; }
-                }
-            }
-    }
-}
-
 void setup() {
     pinMode(MIC_PIN, INPUT);
     pinMode(COLOR_PIN, INPUT);
-    Serial.begin(9600);
+    // Serial.begin(9600);
 
     animationButton.attachLongPressStop(onButtonLongPress);
     animationButton.attachClick(onButtonShortPress);
 
-    FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
+    FastLED.addLeds<WS2812B, DATA_PIN, RGB>(leds, NUM_LEDS);
     FastLED.setBrightness(10);
     FastLED.clear();
     FastLED.show();
@@ -145,14 +131,15 @@ void setup() {
 void onButtonShortPress() {
     selectedAnimation++;
     if (selectedAnimation % 4 == 0) { selectedAnimation = 0; }
+    FastLED.clear();
 }
 
-void onButtonLongPress() {}
+void onButtonLongPress() {
+    color = CRGB(random(255), random(255), random(255));
+}
 
 void loop() {
     animationButton.tick();
-    color = analogRead(COLOR_PIN);
-    color = map(color, 0, 1023, 0, 255);
 
     switch(selectedAnimation) {
         case animationTypes::ANIMATION_RAINBOW:
@@ -167,7 +154,8 @@ void loop() {
         case animationTypes::ANIMATION_SOLID_TRAIL_DOUBLE:
             solid_trail2();
             break;
+        default:
+            break;
     }
-    
     FastLED.show();
 }
