@@ -3,7 +3,7 @@
 
 #define NUM_LEDS 28
 #define DATA_PIN 2
-#define COLOR_PIN A2
+#define SENSITIVITY A4
 #define MIC_PIN A0
 
 #define BUTTON_PIN 5
@@ -17,7 +17,7 @@ CRGB color(100, 100, 100);
 uint8_t brightness = 10;
 uint8_t selectedAnimation = 0;
 
-enum animationTypes {
+enum AnimationTypes {
   ANIMATION_RAINBOW = 0,
   ANIMATION_RAINBOW_MIDDLE = 1,
   ANIMATION_SOLID_TRAIL = 2,
@@ -26,8 +26,11 @@ enum animationTypes {
 
 int read_mic() {
     int value = analogRead(MIC_PIN);
+    int sensitivity = analogRead(SENSITIVITY);
+    sensitivity = map(sensitivity, 0, 1024, 0, 512);
+
     value = abs(value - 512); // max 450
-    value = (value <= 0) ? 0 : (value - 0);
+    value = (value <= sensitivity) ? 0 : (value - sensitivity);
     return value;
 }
 
@@ -40,7 +43,7 @@ void rainbow() {
         return;
     }
 
-    fill_rainbow(leds, mappedValue, rgb2hsv_approximate(color).hue, 12);
+    fill_rainbow(leds, mappedValue, color, 12);
 }
 
 void rainbow_middle() {
@@ -70,17 +73,17 @@ void solid_trail() {
     static int lastHead = 0;
 
     int value = read_mic();
-    int mappedValue = map(value, 0, 450, 0, NUM_LEDS);
+    int mappedValue = map(value, 0, 512, 0, NUM_LEDS);
 
     if (mappedValue > lastHead) {
         lastHead = mappedValue;
-        leds[lastHead] = CRGB::White;
+        leds[lastHead].setRGB(255,255,255);
     }else {
-        if (calledTime % 10 == 0) {
+        if (calledTime % 20 == 0) {
             calledTime = 0;
-            leds[lastHead] = CRGB::Black;
+            leds[lastHead].setRGB(0,0,0);
             lastHead = lastHead - 1;
-            leds[lastHead] = CRGB::White;
+            leds[lastHead].setRGB(255,255,255);
         }
     }
 
@@ -93,20 +96,20 @@ void solid_trail2() {
     static int lastHead = 0;
 
     int value = read_mic();
-    int mappedValue = map(value, 0, 450, 0, NUM_LEDS);
+    int mappedValue = map(value, 0, 512, 0, NUM_LEDS);
 
     if (mappedValue > lastHead) {
         lastHead = mappedValue;
-        leds[lastHead] = CRGB::White;
-        leds[lastHead - 1] = CRGB::White;
+        leds[lastHead].setRGB(255,255,255);
+        leds[lastHead - 1].setRGB(255,255,255);
     }else {
-        if (calledTime % 10 == 0) {
+        if (calledTime % 20 == 0) {
             calledTime = 0;
-            leds[lastHead] = CRGB::Black;
-            leds[lastHead - 1] = CRGB::Black;
+            leds[lastHead].setRGB(0,0,0);
+            leds[lastHead - 1].setRGB(0,0,0);
             lastHead = lastHead - 1;
-            leds[lastHead] = CRGB::White;
-            leds[lastHead - 1] = CRGB::White;
+            leds[lastHead].setRGB(255,255,255);
+            leds[lastHead - 1].setRGB(255,255,255);
         }
     }
 
@@ -116,7 +119,7 @@ void solid_trail2() {
 
 void setup() {
     pinMode(MIC_PIN, INPUT);
-    pinMode(COLOR_PIN, INPUT);
+    pinMode(SENSITIVITY, INPUT);
     // Serial.begin(9600);
 
     animationButton.attachLongPressStop(onButtonLongPress);
@@ -142,20 +145,21 @@ void loop() {
     animationButton.tick();
 
     switch(selectedAnimation) {
-        case animationTypes::ANIMATION_RAINBOW:
+        case AnimationTypes::ANIMATION_RAINBOW:
             rainbow();
             break;
-        case animationTypes::ANIMATION_RAINBOW_MIDDLE:
+        case AnimationTypes::ANIMATION_RAINBOW_MIDDLE:
             rainbow_middle();
             break;
-        case animationTypes::ANIMATION_SOLID_TRAIL:
+        case AnimationTypes::ANIMATION_SOLID_TRAIL:
             solid_trail();
             break;
-        case animationTypes::ANIMATION_SOLID_TRAIL_DOUBLE:
+        case AnimationTypes::ANIMATION_SOLID_TRAIL_DOUBLE:
             solid_trail2();
             break;
         default:
             break;
     }
+    FastLED.delay(5);
     FastLED.show();
 }
