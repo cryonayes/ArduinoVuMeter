@@ -40,7 +40,7 @@ void rainbow() {
         return;
     }
 
-    fill_rainbow(leds, mappedValue, rgb2hsv_approximate(color).hue, 12);
+    fill_rainbow(leds, mappedValue, color, 12);
 }
 
 void rainbow_middle() {
@@ -52,7 +52,7 @@ void rainbow_middle() {
         return;
     }
 
-    fill_rainbow(&leds[NUM_LEDS / 2 - 1], mappedValue / 2 + 1, rgb2hsv_approximate(color).hue, 12);
+    fill_rainbow(&leds[NUM_LEDS / 2 - 1], mappedValue / 2 + 1, color, 12);
 
     for(int i = (NUM_LEDS / 2 - 1); i >= 0; i--) { 
         if (i == 0) {
@@ -84,7 +84,7 @@ void solid_trail() {
         }
     }
 
-    fill_solid(leds, mappedValue, color);
+    fill_solid(leds, mappedValue, CRGB::Blue);
     calledTime++;
 }
 
@@ -110,7 +110,7 @@ void solid_trail2() {
         }
     }
 
-    fill_solid(leds, mappedValue, color);
+    fill_solid(leds, mappedValue, CRGB::Red);
     calledTime++;
 }
 
