@@ -54,10 +54,10 @@ void setup() {
     Serial.begin(9600);
     LEDControllerSettings settings = {
         .ledPIN = 2,
-        .brightness = 1,
+        .brightness = 100,
         .delay = 0,
         .animationSettings = {
-            .rainbowStep = 12,
+            .rainbowStep = 10,
             .peakTrailSize = 2,
             .countTrailStep = 20,
             .delayTrail = 0
@@ -87,6 +87,7 @@ int read_mic() {
 void loop() {
     animationButton.tick();
     int micVal = read_mic();
+    Serial.println(micVal, DEC);
     int ledVal = map(micVal, 0, 1025, 0, 29);
 
     myController->update(ledVal);
