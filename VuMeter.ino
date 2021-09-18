@@ -3,9 +3,11 @@
 
 #define MIC_PIN A4
 #define SENSITIVITY A0
-#define LED_COUNT 28
-#define LED_PIN 2
-#define BUTTON_PIN 5
+#define LED_COUNT 32
+#define LED_PIN 13
+#define BUTTON_PIN 4
+
+int lvl = 10;
 
 typedef LEDController<LED_COUNT, LED_PIN> MyController;
 MyController* myController;
@@ -51,10 +53,10 @@ void onButtonDoubleClick() {
 }
 
 void setup() {
-    Serial.begin(9600);
+    Serial.begin(115200);
     LEDControllerSettings settings = {
         .ledPIN = 2,
-        .brightness = 100,
+        .brightness = 15,
         .delay = 0,
         .animationSettings = {
             .rainbowStep = 10,
@@ -76,19 +78,26 @@ void setup() {
 }
 
 int read_mic() {
-    int value = analogRead(MIC_PIN);
-    int sensitivity = 0; //analogRead(SENSITIVITY);
-    sensitivity = map(sensitivity, 0, 1025, 0, 512);
+    int value = (analogRead(MIC_PIN) - 512);
+    int sensitivity = 50;
 
     value = (value <= sensitivity) ? 0 : (value - sensitivity);
-    return value;
+    lvl = (lvl * 7 + value) >> 3;
+
+    double ledLevel = lvl / 512.0;
+    ledLevel = (pow(2, (2 * ledLevel) / 1.5) - 1) * 512;
+
+    if(ledLevel > 512) {
+        ledLevel = 512;
+    }
+
+    return ledLevel;
 }
 
 void loop() {
     animationButton.tick();
     int micVal = read_mic();
-    Serial.println(micVal, DEC);
-    int ledVal = map(micVal, 0, 1025, 0, 29);
+    int ledVal = map(micVal, 0, 512, 0, LED_COUNT);
 
     myController->update(ledVal);
 
