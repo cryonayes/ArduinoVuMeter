@@ -3,7 +3,7 @@
 
 #define MIC_PIN A4
 #define SENSITIVITY A0
-#define LED_COUNT 32
+#define LED_COUNT 29
 #define LED_PIN 13
 #define BUTTON_PIN 4
 
@@ -79,13 +79,15 @@ void setup() {
 
 int read_mic() {
     int value = (analogRead(MIC_PIN) - 512);
-    int sensitivity = 50;
-
+    int sensitivity = 0;
     value = (value <= sensitivity) ? 0 : (value - sensitivity);
-    lvl = (lvl * 7 + value) >> 3;
 
+    lvl = (lvl * 7 + value) >> 3;
     double ledLevel = lvl / 512.0;
-    ledLevel = (pow(2, (2 * ledLevel) / 1.5) - 1) * 512;
+    
+    Serial.println(ledLevel);
+    ledLevel = (exp(ledLevel * 1.9) - 1.05) * 512;
+    Serial.println(ledLevel);
 
     if(ledLevel > 512) {
         ledLevel = 512;
@@ -97,7 +99,7 @@ int read_mic() {
 void loop() {
     animationButton.tick();
     int micVal = read_mic();
-    int ledVal = map(micVal, 0, 512, 0, LED_COUNT);
+    int ledVal = map(micVal, 0, 513, 0, LED_COUNT);
 
     myController->update(ledVal);
 
