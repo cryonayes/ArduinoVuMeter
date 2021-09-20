@@ -1,11 +1,10 @@
 #include <LEDController.h>
 #include <OneButton.h>
 
-#define MIC_PIN A4
-#define SENSITIVITY A0
-#define LED_COUNT 29
-#define LED_PIN 13
-#define BUTTON_PIN 4
+#define MIC_PIN A0
+#define LED_COUNT 27
+#define LED_PIN 2
+#define BUTTON_PIN 12
 
 int lvl = 10;
 
@@ -21,7 +20,7 @@ void onButtonShortPress() {
 void onButtonLongPress() {
     static int animationIndex = 0;
     animationIndex++;
-    if (animationIndex % 6 == 0) { animationIndex = 0; }
+    if (animationIndex % 7 == 0) { animationIndex = 0; }
 
     if(animationIndex == 1) {
         myController->changeAnimation(AnimationTypes::ANIMATION_RAINBOW);
@@ -33,6 +32,8 @@ void onButtonLongPress() {
         myController->changeAnimation(AnimationTypes::ANIMATION_RAINBOW_MIDDLE_CYCLE);
     }else if(animationIndex == 5) {
         myController->changeAnimation(AnimationTypes::ANIMATION_SOLID_TRAIL);
+    }else if(animationIndex == 6) {
+        myController->changeAnimation(AnimationTypes::ANIMATION_SOLID_TRAIL_DOUBLE);
     }
 }
 
@@ -56,12 +57,11 @@ void setup() {
     Serial.begin(115200);
     LEDControllerSettings settings = {
         .ledPIN = 2,
-        .brightness = 15,
+        .brightness = 25,
         .delay = 0,
         .animationSettings = {
             .rainbowStep = 10,
-            .peakTrailSize = 2,
-            .countTrailStep = 20,
+            .countTrailStep = 10,
             .delayTrail = 0
         },
         .powerSettings = {
@@ -70,7 +70,7 @@ void setup() {
         }
     };
     myController = &MyController::getInstance(settings);
-    myController->changeAnimation(AnimationTypes::ANIMATION_RAINBOW_MIDDLE);
+    myController->changeAnimation(AnimationTypes::ANIMATION_SOLID_TRAIL);
 
     animationButton.attachLongPressStop(onButtonLongPress);
     animationButton.attachClick(onButtonShortPress);
@@ -79,20 +79,19 @@ void setup() {
 
 int read_mic() {
     int value = (analogRead(MIC_PIN) - 512);
-    int sensitivity = 0;
-    value = (value <= sensitivity) ? 0 : (value - sensitivity);
-
+   
     lvl = (lvl * 7 + value) >> 3;
     double ledLevel = lvl / 512.0;
+    //ledLevel = (log(pow(18 * ledLevel, 1/0.9) - 1.1)) * 512;
+    ledLevel = (log(pow(18 * ledLevel, 1/0.9) - 1)) * 512;
     
-    Serial.println(ledLevel);
-    ledLevel = (exp(ledLevel * 1.9) - 1.05) * 512;
-    Serial.println(ledLevel);
-
     if(ledLevel > 512) {
         ledLevel = 512;
     }
-
+    if (ledLevel < 0){
+        ledLevel = 0;
+    }
+    
     return ledLevel;
 }
 
