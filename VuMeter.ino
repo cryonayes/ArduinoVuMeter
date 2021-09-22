@@ -18,9 +18,8 @@ void onButtonShortPress() {
 }
 
 void onButtonLongPress() {
-    static int animationIndex = 0;
-    animationIndex++;
-    if (animationIndex % 7 == 0) { animationIndex = 0; }
+    static int animationIndex = 1;
+    if (animationIndex % 13 == 0) { animationIndex = 1; }
 
     if(animationIndex == 1) {
         myController->changeAnimation(AnimationTypes::ANIMATION_RAINBOW);
@@ -34,7 +33,21 @@ void onButtonLongPress() {
         myController->changeAnimation(AnimationTypes::ANIMATION_SOLID_TRAIL);
     }else if(animationIndex == 6) {
         myController->changeAnimation(AnimationTypes::ANIMATION_SOLID_TRAIL_DOUBLE);
+    }else if(animationIndex == 7) {
+        myController->changeAnimation(AnimationTypes::ANIMATION_SOLID_TRAIL_MIDDLE);
+    }else if(animationIndex == 8) {
+        myController->changeAnimation(AnimationTypes::ANIMATION_SOLID_TRAIL_MIDDLE_DOUBLE);
+    }else if(animationIndex == 9) {
+        myController->changeAnimation(AnimationTypes::ANIMATION_RAINBOW_TRAIL_MIDDLE);
+    }else if(animationIndex == 10) {
+        myController->changeAnimation(AnimationTypes::ANIMATION_RAINBOW_TRAIL_MIDDLE_CYCLE);
+    }else if(animationIndex == 11) {
+        myController->changeAnimation(AnimationTypes::ANIMATION_RAINBOW_TRAIL_DOUBLE_MIDDLE);
+    }else if(animationIndex == 12) {
+        myController->changeAnimation(AnimationTypes::ANIMATION_RAINBOW_TRAIL_DOUBLE_MIDDLE_CYCLE);
     }
+
+    animationIndex++;
 }
 
 void onButtonDoubleClick() {
@@ -70,7 +83,7 @@ void setup() {
         }
     };
     myController = &MyController::getInstance(settings);
-    myController->changeAnimation(AnimationTypes::ANIMATION_SOLID_TRAIL);
+    myController->changeAnimation(AnimationTypes::ANIMATION_RAINBOW);
 
     animationButton.attachLongPressStop(onButtonLongPress);
     animationButton.attachClick(onButtonShortPress);
@@ -102,7 +115,10 @@ void loop() {
 
     myController->update(ledVal);
 
-    if(myController->getAnimation() == AnimationTypes::ANIMATION_RAINBOW_CYCLE || myController->getAnimation() == AnimationTypes::ANIMATION_RAINBOW_MIDDLE_CYCLE) {
+    if(myController->getAnimation() == AnimationTypes::ANIMATION_RAINBOW_CYCLE ||
+    myController->getAnimation() == AnimationTypes::ANIMATION_RAINBOW_MIDDLE_CYCLE || 
+    myController->getAnimation() == AnimationTypes::ANIMATION_RAINBOW_TRAIL_DOUBLE_MIDDLE_CYCLE || 
+    myController->getAnimation() == AnimationTypes::ANIMATION_RAINBOW_TRAIL_MIDDLE_CYCLE) {
         EVERY_N_MILLISECONDS(20) {
             myController->setRainbowColor(myController->getRainbowColor().hue + 5 % 255);
         }
