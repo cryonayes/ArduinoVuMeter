@@ -1,10 +1,12 @@
 #include <LEDController.h>
 #include <OneButton.h>
+#include <EEPROM.h>
 
 #define MIC_PIN A0
 #define LED_COUNT 27
 #define LED_PIN 2
 #define BUTTON_PIN 12
+#define STATE_ADDRESS 0
 
 int lvl = 10;
 
@@ -18,7 +20,7 @@ void onButtonShortPress() {
 }
 
 void onButtonLongPress() {
-    static int animationIndex = 1;
+    static uint8_t animationIndex = 1;
     if (animationIndex % 13 == 0) { animationIndex = 1; }
 
     if(animationIndex == 1) {
@@ -46,7 +48,7 @@ void onButtonLongPress() {
     }else if(animationIndex == 12) {
         myController->changeAnimation(AnimationTypes::ANIMATION_RAINBOW_TRAIL_DOUBLE_MIDDLE_CYCLE);
     }
-
+    updateEEPROM(STATE_ADDRESS, animationIndex);
     animationIndex++;
 }
 
@@ -82,8 +84,9 @@ void setup() {
             .miliamps = 50
         }
     };
+    int state = EEPROM.read(STATE_ADDRESS);
     myController = &MyController::getInstance(settings);
-    myController->changeAnimation(AnimationTypes::ANIMATION_RAINBOW);
+    myController->changeAnimation(static_cast<AnimationTypes>(state));
 
     animationButton.attachLongPressStop(onButtonLongPress);
     animationButton.attachClick(onButtonShortPress);
@@ -108,11 +111,17 @@ int read_mic() {
     return ledLevel;
 }
 
+int updateEEPROM(uint8_t address, uint8_t value) {
+    int storedValue = EEPROM.read(address);
+    if (storedValue != value) {
+        EEPROM.write(address, value);
+    }
+}
+
 void loop() {
     animationButton.tick();
     int micVal = read_mic();
     int ledVal = map(micVal, 0, 513, 0, LED_COUNT);
-
     myController->update(ledVal);
 
     if(myController->getAnimation() == AnimationTypes::ANIMATION_RAINBOW_CYCLE ||
